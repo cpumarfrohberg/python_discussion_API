@@ -1,4 +1,7 @@
-pandas==1.2.4
-scikit-learn==0.24.2
+fastapi
 numpy
-streamlit 
+pydantic
+pymongo
+pytest
+requests
+ruff

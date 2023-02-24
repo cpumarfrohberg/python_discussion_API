@@ -1,71 +1,39 @@
-import pickle, time, logging
-from warnings import filterwarnings
-filterwarnings(action='ignore')
+#main.py
+from consume_reddit_API import endpoint_data, indexed_endpoint_data
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel 
+from pymongo import MongoClient
 
-import pandas as pd
+class RedittMessage(BaseModel):
+    title: str                  
+    key: int
 
-from sklearn.metrics import f1_score, confusion_matrix, roc_auc_score
+client = MongoClient('localhost')
+db = client.db 
+reddit_collection = db.reddit_data_collection
 
-logging.basicConfig(level = logging.DEBUG)
+app = FastAPI()
 
-from utils import DataModeler, WEIGHTS
+@app.get('/')
+async def root():
+    return {'message':'Consuming reddit API data.'}
 
+@app.get('/reddit_titles')
+async def render_endpoint_data():
+    endpoint_data = reddit_collection.find({})
+    return [
+        {key: endpoint_data_element[key] for key in endpoint_data_element if key != '_id'} #A
+        for endpoint_data_element in endpoint_data
+    ]
 
-def main():
-    model_data = DataModeler()
-    prepped_data = model_data.prepare_data()
-    split_dict = model_data.split_timestamp_data(X = prepped_data['feature_matrix'], 
-                                                y = prepped_data['labels'])
-    X_train, X_val, y_train, y_val = (split_dict['X_train_fe'], split_dict['X_val_fe'], 
-                                    split_dict['y_train'], split_dict['y_val'])
-    
-    time.sleep(2)
-    logging.debug("model fit on X_train and X_val")
-    clf_LR = model_data.model_fit(
-        X_train = X_train, 
-        y_train = y_train,
-        weights=WEIGHTS
-        )
-    
-    time.sleep(2)
-    logging.debug("making predictions on X_train and X_val")
-    pred_X_train = model_data.predictions(
-        fit_model = clf_LR,
-        X = X_train
-        )
-    pred_X_val = model_data.predictions(
-        fit_model = clf_LR,
-        X = X_val
-        )
-    
-    f1_score_train = f1_score(y_train, pred_X_train).round(2)
-    f1_score_val = f1_score(y_val, pred_X_val).round(2)
+@app.get('/reddit_titles_indexed/{reddit_post_id}')
+async def render_endpoint_data_by_id(reddit_post_id: int):
+    if reddit_collection.count_documents({'id': reddit_post_id}) > 0:
+        endpoint_data_element = reddit_collection.find_one({'id': reddit_post_id})
+        return {key: endpoint_data_element[key] for key in endpoint_data_element if key != '_id'}
+    raise HTTPException(status_code=404, detail=f'No message found with id {reddit_post_id}')
 
-    time.sleep(2)
-    logging.info(f"The f1 - score based on training set is: {(f1_score_train).round(2)}")
-    time.sleep(2)
-    logging.info(f"The f1 - score based on validation set is: {(f1_score_val).round(2)}")
-
-    time.sleep(2)   
-    logging.info(f"Confusion Matrix on validation set: \n{confusion_matrix(y_val, pred_X_val)}")
-    time.sleep(2)   
-    logging.info(f"Area Under Curve (validation set): {roc_auc_score(y_val, pred_X_val).round(2)}")
-
-    time.sleep(1)   
-    logging.info("saving full model")
-    with open("./artifacts/churn-model.bin", "wb") as f_out:
-        pickle.dump(clf_LR, f_out) 
-    time.sleep(2)   
-    logging.info("full model saved as churn-model.bin")
-
-if __name__ == "__main__":
-    main()
-    
-    
-
-    
-
-
-
-
-
+@app.post('/reddit_titles')
+async def post_message(inserted_message: RedittMessage): 
+    reddit_collection.insert_one(inserted_message.dict()) 
+    return inserted_message
