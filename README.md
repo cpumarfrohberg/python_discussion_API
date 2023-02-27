@@ -1,6 +1,6 @@
-<h1 align="center">Build a REST API with FastAPI</h1>
+<h1 align="center">Build a REST API with FastAPI ⚡️</h1>
 <p align="center">Project Description</p>
-Extract data from reddit- API and build own API using FastAPI.
+Extract data from reddit-API and build own API using FastAPI.
 
 ## Content of the project
 * 1. `consume_reddit_API.py`: get tokens and extract discussions on `Python`; parse and reindex data
@@ -12,11 +12,10 @@ Extract data from reddit- API and build own API using FastAPI.
 * clone repo locally
 * create an environment based on requirements
 * run `uvicorn main:app --host '0.0.0.0' --port 8080 --reload` on your browser
-* run `Docker`container with latest `mongo`-DB image
+* connect to local `mongitaDB`-client for posting new messages
 
 ## Future Updates
-- [ ] Correct for overwriting data while making `POST`-requests
-- [ ] Refactor `utils.py`
+- [ ] Update extracted data with new `POST`-requests
 
 
 ## Author
