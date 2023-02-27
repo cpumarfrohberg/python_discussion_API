@@ -1,8 +1,6 @@
-#consume_reddit_API.py 
-#import pytest
-from  utils import (fill_reddit_dict, enumerate_reddit_dict)
-import config
-import requests
+#consume_reddit_API
+from  utils import RedditDicts
+import config, requests
 from requests.auth import HTTPBasicAuth
 
 basic_auth = HTTPBasicAuth(
@@ -28,8 +26,7 @@ access_post_response = requests.post(
     auth=basic_auth
 ).json()
 
-headers['Authorization'] = access_post_response.get('token_type') + \
-    ' ' + access_post_response.get('access_token')
+headers['Authorization'] = access_post_response.get('token_type') + ' ' + access_post_response.get('access_token')
 
 topic = 'Python'
 URL = f"https://oauth.reddit.com/r/{topic}/hot"
@@ -41,11 +38,11 @@ response = requests.get(
 
 full_response = response.get('data').get('children')
 
-endpoint_data = fill_reddit_dict(full_response)
-indexed_endpoint_data = enumerate_reddit_dict(endpoint_data)
+oRedditDicts = RedditDicts()
+endpoint_data = oRedditDicts.fill_reddit_dict(full_response)
+indexed_endpoint_data = oRedditDicts.enumerate_reddit_dict(endpoint_data)
 
-# def test_fill_reddit_dict():
-#     assert type(endpoint_data) == dict
 
-# def test_enumerate_reddit_dict():
-#     assert len(indexed_endpoint_data) == 27
+
+
+
